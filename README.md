@@ -21,7 +21,7 @@ A simple, interactive task management application built with HTML, JavaScript, R
 
 1. **Clone the Repository**:
    ```bash
-   git clone <repository-url>
+   git clone [<repository-url>](https://github.com/turki-aloufi/Task-Manager-App.git)
    cd task-manager
    ```
 
