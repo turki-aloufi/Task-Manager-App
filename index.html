@@ -1,0 +1,328 @@
+<!-- <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task Manager</title>
+    <style>
+        body { font-family: Arial, sans-serif; }
+        ul { list-style: none; padding: 0; }
+        li { padding: 10px; background: #f4f4f4; margin: 5px 0; cursor: grab; display: flex; justify-content: space-between; align-items: center; }
+        .dragging { opacity: 0.5; }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/redux/4.1.2/redux.min.js"></script>
+</head>
+<body>
+    <h2>Task Manager</h2>
+    <input id="taskInput" type="text" placeholder="Add Task">
+    <button onclick="addTask()">Add</button>
+    <select id="filter" onchange="renderTasks()">
+        <option value="all">All</option>
+        <option value="completed">Completed</option>
+        <option value="pending">Pending</option>
+    </select>
+    <ul id="taskList"></ul>
+
+    <script>
+        const initialState = JSON.parse(localStorage.getItem("tasks")) || [];
+        
+        function taskReducer(state = initialState, action) {
+            switch (action.type) {
+                case "SET_TASKS":
+                    return action.payload;
+                case "ADD_TASK":
+                    return [...state, action.payload];
+                case "TOGGLE_TASK":
+                    return state.map(task => task.id === action.payload ? { ...task, completed: !task.completed } : task);
+                case "DELETE_TASK":
+                    return state.filter(task => task.id !== action.payload);
+                case "REORDER_TASKS":
+                    return action.payload;
+                default:
+                    return state;
+            }
+        }
+        
+        const store = Redux.createStore(taskReducer);
+        
+        function fetchTasks() {
+            fetch("https://jsonplaceholder.typicode.com/todos?_limit=10")
+                .then(res => res.json())
+                .then(data => {
+                    store.dispatch({ type: "SET_TASKS", payload: data });
+                    saveToLocalStorage();
+                });
+        }
+        
+        function saveToLocalStorage() {
+            localStorage.setItem("tasks", JSON.stringify(store.getState()));
+        }
+        
+        function renderTasks() {
+            const tasks = store.getState();
+            const taskList = document.getElementById("taskList");
+            taskList.innerHTML = "";
+            const filter = document.getElementById("filter").value;
+            
+            tasks.filter(task => 
+                filter === "all" ? true : filter === "completed" ? task.completed : !task.completed
+            ).forEach(task => {
+                const li = document.createElement("li");
+                li.draggable = true;
+                li.dataset.id = task.id;
+                li.innerHTML = `
+                    <input type="checkbox" ${task.completed ? "checked" : ""} onchange="toggleTask(${task.id})">
+                    ${task.title}
+                    <button onclick="deleteTask(${task.id})">Delete</button>
+                `;
+                
+                li.addEventListener("dragstart", handleDragStart);
+                li.addEventListener("dragover", handleDragOver);
+                li.addEventListener("drop", handleDrop);
+                li.addEventListener("dragend", handleDragEnd);
+                
+                taskList.appendChild(li);
+            });
+            saveToLocalStorage();
+        }
+        
+        function addTask() {
+            const taskInput = document.getElementById("taskInput").value.trim();
+            if (taskInput.length < 5) return alert("Task must be at least 5 characters long.");
+            const newTask = { id: Date.now(), title: taskInput, completed: false };
+            store.dispatch({ type: "ADD_TASK", payload: newTask });
+            document.getElementById("taskInput").value = "";
+            renderTasks();
+        }
+        
+        function toggleTask(id) {
+            store.dispatch({ type: "TOGGLE_TASK", payload: id });
+            renderTasks();
+        }
+        
+        function deleteTask(id) {
+            store.dispatch({ type: "DELETE_TASK", payload: id });
+            renderTasks();
+        }
+        
+        let draggedItem = null;
+
+        function handleDragStart(e) {
+            draggedItem = this;
+            setTimeout(() => this.classList.add("dragging"), 0);
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            const taskList = document.getElementById("taskList");
+            const draggingOver = e.target.closest("li");
+            if (draggingOver && draggingOver !== draggedItem) {
+                const items = [...taskList.children];
+                const draggedIndex = items.indexOf(draggedItem);
+                const targetIndex = items.indexOf(draggingOver);
+                taskList.insertBefore(draggedItem, draggedIndex < targetIndex ? draggingOver.nextSibling : draggingOver);
+            }
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            const taskList = document.getElementById("taskList");
+            const reorderedTasks = [...taskList.children].map(li => {
+                const id = parseInt(li.dataset.id);
+                return store.getState().find(task => task.id === id);
+            });
+            store.dispatch({ type: "REORDER_TASKS", payload: reorderedTasks });
+            saveToLocalStorage();
+        }
+
+        function handleDragEnd() {
+            this.classList.remove("dragging");
+            draggedItem = null;
+        }
+        
+        store.subscribe(renderTasks);
+        fetchTasks();
+    </script>
+</body>
+</html> -->
+
+
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task Manager</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/redux/4.1.2/redux.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen bg-gray-100 font-sans">
+    <div class="container mx-auto p-6 max-w-2xl">
+        <h2 class="text-2xl font-bold mb-6 text-gray-800">Task Manager</h2>
+        
+        <div class="flex gap-4 mb-6">
+            <input 
+                id="taskInput" 
+                type="text" 
+                placeholder="Add Task" 
+                class="flex-1 p-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+            <button 
+                onclick="addTask()" 
+                class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+            >
+                Add
+            </button>
+            <select 
+                id="filter" 
+                onchange="renderTasks()" 
+                class="p-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+                <option value="all">All</option>
+                <option value="completed">Completed</option>
+                <option value="pending">Pending</option>
+            </select>
+        </div>
+
+        <ul id="taskList" class="space-y-2"></ul>
+    </div>
+
+    <script>
+        const initialState = JSON.parse(localStorage.getItem("tasks")) || [];
+        
+        function taskReducer(state = initialState, action) {
+            switch (action.type) {
+                case "SET_TASKS":
+                    return action.payload;
+                case "ADD_TASK":
+                    return [...state, action.payload];
+                case "TOGGLE_TASK":
+                    return state.map(task => task.id === action.payload ? { ...task, completed: !task.completed } : task);
+                case "DELETE_TASK":
+                    return state.filter(task => task.id !== action.payload);
+                case "REORDER_TASKS":
+                    return action.payload;
+                default:
+                    return state;
+            }
+        }
+        
+        const store = Redux.createStore(taskReducer);
+        
+        function fetchTasks() {
+            fetch("https://jsonplaceholder.typicode.com/todos?_limit=10")
+                .then(res => res.json())
+                .then(data => {
+                    store.dispatch({ type: "SET_TASKS", payload: data });
+                    saveToLocalStorage();
+                });
+        }
+        
+        function saveToLocalStorage() {
+            localStorage.setItem("tasks", JSON.stringify(store.getState()));
+        }
+        
+        function renderTasks() {
+            const tasks = store.getState();
+            const taskList = document.getElementById("taskList");
+            taskList.innerHTML = "";
+            const filter = document.getElementById("filter").value;
+            
+            tasks.filter(task => 
+                filter === "all" ? true : filter === "completed" ? task.completed : !task.completed
+            ).forEach(task => {
+                const li = document.createElement("li");
+                li.draggable = true;
+                li.dataset.id = task.id;
+                li.className = "bg-white p-4 rounded-lg shadow-sm flex items-center justify-between cursor-grab hover:shadow-md transition-shadow";
+                li.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <input 
+                            type="checkbox" 
+                            ${task.completed ? "checked" : ""} 
+                            onchange="toggleTask(${task.id})"
+                            class="h-5 w-5 text-blue-500 rounded focus:ring-blue-500"
+                        >
+                        <span class="${task.completed ? 'line-through text-gray-500' : 'text-gray-800'}">
+                            ${task.title}
+                        </span>
+                    </div>
+                    <button 
+                        onclick="deleteTask(${task.id})" 
+                        class="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
+                    >
+                        Delete
+                    </button>
+                `;
+                
+                li.addEventListener("dragstart", handleDragStart);
+                li.addEventListener("dragover", handleDragOver);
+                li.addEventListener("drop", handleDrop);
+                li.addEventListener("dragend", handleDragEnd);
+                
+                taskList.appendChild(li);
+            });
+            saveToLocalStorage();
+        }
+        
+        function addTask() {
+            const taskInput = document.getElementById("taskInput").value.trim();
+            if (taskInput.length < 5) return alert("Task must be at least 5 characters long.");
+            const newTask = { id: Date.now(), title: taskInput, completed: false };
+            store.dispatch({ type: "ADD_TASK", payload: newTask });
+            document.getElementById("taskInput").value = "";
+            renderTasks();
+        }
+        
+        function toggleTask(id) {
+            store.dispatch({ type: "TOGGLE_TASK", payload: id });
+            renderTasks();
+        }
+        
+        function deleteTask(id) {
+            store.dispatch({ type: "DELETE_TASK", payload: id });
+            renderTasks();
+        }
+        
+        let draggedItem = null;
+
+        function handleDragStart(e) {
+            draggedItem = this;
+            setTimeout(() => this.classList.add("opacity-50"), 0);
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            const taskList = document.getElementById("taskList");
+            const draggingOver = e.target.closest("li");
+            if (draggingOver && draggingOver !== draggedItem) {
+                const items = [...taskList.children];
+                const draggedIndex = items.indexOf(draggedItem);
+                const targetIndex = items.indexOf(draggingOver);
+                taskList.insertBefore(draggedItem, draggedIndex < targetIndex ? draggingOver.nextSibling : draggingOver);
+            }
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            const taskList = document.getElementById("taskList");
+            const reorderedTasks = [...taskList.children].map(li => {
+                const id = parseInt(li.dataset.id);
+                return store.getState().find(task => task.id === id);
+            });
+            store.dispatch({ type: "REORDER_TASKS", payload: reorderedTasks });
+            saveToLocalStorage();
+        }
+
+        function handleDragEnd() {
+            this.classList.remove("opacity-50");
+            draggedItem = null;
+        }
+        
+        store.subscribe(renderTasks);
+        fetchTasks();
+    </script>
+</body>
+</html>
